@@ -12,7 +12,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 print("=== DESCARGANDO DATASET DE KAGGLE ===")
 # 1. Cargar el archivo de clima del dataset 'unicon' de CDAC Lab
 # Indicamos específicamente el archivo weather_data.csv contenido en el dataset
-df_kaggle = kagglehub.load_dataset(
+df_kaggle = kagglehub.dataset_load(
     KaggleDatasetAdapter.PANDAS,
     "cdaclab/unicon",
     "weather_data.csv"
