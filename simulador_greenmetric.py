@@ -2,10 +2,26 @@ import os
 import pickle
 import tkinter as tk
 from tkinter import ttk, messagebox
+import tkinter.font as tkFont  # <-- Importado para fuentes personalizadas en Tkinter
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm  # <-- Importado para registrar la fuente en Matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+# ==========================================
+# REGISTRO Y CARGA DE FUENTES LOCALE
+# ==========================================
+FONT_PATH_REGULAR = os.path.join("assets", "fuentes", "Montserrat-Regular.ttf")
+FONT_PATH_BOLD = os.path.join("assets", "fuentes", "Montserrat-Bold.ttf")
+FONT_PATH_ITALIC = os.path.join("assets", "fuentes", "Montserrat-Italic.ttf")
+
+# Registrar fuentes en Matplotlib si los archivos existen
+for fpath in [FONT_PATH_REGULAR, FONT_PATH_BOLD, FONT_PATH_ITALIC]:
+    if os.path.exists(fpath):
+        fm.fontManager.addfont(fpath)
+
+FONT_FAMILY_NAME = "Montserrat"  # Nombre con el que la reconoce el sistema/Matplotlib
 
 # ==========================================
 # PALETAS DE COLORES (CLARO vs OSCURO)
@@ -65,7 +81,19 @@ class GreenMetricAuditApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Plataforma de Auditoría GreenMetric URBE")
-        self.root.geometry("1300x780")
+        self.root.geometry("1300x850")
+        
+        # ---------------------------------------------------------
+        # CONFIGURACIÓN DE FUENTES PARA TKINTER
+        # ---------------------------------------------------------
+        # Se define la familia registrada en Windows/Linux/macOS o la de respaldo "Arial"
+        self.font_title = tkFont.Font(family=FONT_FAMILY_NAME, size=12, weight="bold")
+        self.font_subtitle = tkFont.Font(family=FONT_FAMILY_NAME, size=9, slant="italic")
+        self.font_bold_lg = tkFont.Font(family=FONT_FAMILY_NAME, size=15, weight="bold")
+        self.font_bold_md = tkFont.Font(family=FONT_FAMILY_NAME, size=10, weight="bold")
+        self.font_regular = tkFont.Font(family=FONT_FAMILY_NAME, size=10)
+        self.font_small_bold = tkFont.Font(family=FONT_FAMILY_NAME, size=9, weight="bold")
+        self.font_small = tkFont.Font(family=FONT_FAMILY_NAME, size=9)
         
         # Estado del modo visual (Default: Modo Oscuro)
         self.is_dark_mode = True
@@ -85,106 +113,108 @@ class GreenMetricAuditApp:
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         
     def create_widgets(self):
-        # PANEL IZQUIERDO (FOREST DATA)
-        self.left_panel = tk.Frame(self.root, width=410, bg=self.colors["PRIMARY"])
+        # PANEL IZQUIERDO (FOREST DATA) - Mantenemos ancho limpio (320px)
+        self.left_panel = tk.Frame(self.root, width=320, bg=self.colors["PRIMARY"])
         self.left_panel.pack(side="left", fill="both", expand=False)
         self.left_panel.pack_propagate(False)
         
         # PANEL DERECHO (ÁREA DE TRABAJO)
         self.right_panel = tk.Frame(self.root, bg=self.colors["BG_CARD"])
-        self.right_panel.pack(side="right", fill="both", expand=True, padx=20, pady=20)
+        self.right_panel.pack(side="right", fill="both", expand=True, padx=15, pady=15)
         
         # Encabezado con Botón de Ayuda y Toggle de Tema
         self.header_frame = tk.Frame(self.left_panel, bg=self.colors["PRIMARY"])
-        self.header_frame.pack(fill="x", padx=20, pady=(25, 0))
+        self.header_frame.pack(fill="x", padx=15, pady=(20, 0))
         
-        self.title_lbl = tk.Label(self.header_frame, text="AUDITORÍA GREENMETRIC", font=("Arial", 13, "bold"), fg="#FFFFFF", bg=self.colors["PRIMARY"])
+        # Título con fuente Montserrat
+        self.title_lbl = tk.Label(self.header_frame, text="AUDITORÍA GREENMETRIC", font=self.font_title, fg="#FFFFFF", bg=self.colors["PRIMARY"])
         self.title_lbl.pack(side="left")
         
-        # Botón Toggle Modo Oscuro / Claro
+        # Botones de la cabecera
         self.btn_theme = tk.Button(
             self.header_frame, 
             text=" 🌙 ", 
-            font=("Arial", 9, "bold"), 
+            font=self.font_small_bold, 
             fg="#FFFFFF", 
             bg=self.colors["SECONDARY"], 
             bd=0, 
             cursor="hand2",
             command=self.toggle_theme
         )
-        self.btn_theme.pack(side="right", padx=(5, 0))
+        self.btn_theme.pack(side="right", padx=(3, 0))
         
-        # Botón de Ayuda [ ? ]
         self.btn_help = tk.Button(
             self.header_frame, 
             text=" ? ", 
-            font=("Arial", 9, "bold"), 
+            font=self.font_small_bold, 
             fg=self.colors["PRIMARY"], 
             bg=self.colors["ACCENT"], 
             bd=0, 
             cursor="hand2",
             command=self.show_help_window
         )
-        self.btn_help.pack(side="right", padx=(5, 0))
+        self.btn_help.pack(side="right", padx=(3, 0))
         
-        self.subtitle_lbl = tk.Label(self.left_panel, text="Sostenibilidad e Indicadores Globales", font=("Arial", 10, "italic"), fg=self.colors["ACCENT"], bg=self.colors["PRIMARY"])
-        self.subtitle_lbl.pack(anchor="w", padx=20, pady=(2, 15))
+        # Subtítulo
+        self.subtitle_lbl = tk.Label(self.left_panel, text="Sostenibilidad e Indicadores Globales", font=self.font_subtitle, fg=self.colors["ACCENT"], bg=self.colors["PRIMARY"])
+        self.subtitle_lbl.pack(anchor="w", padx=15, pady=(2, 10))
         
         self.sep1 = tk.Frame(self.left_panel, height=2, bg=self.colors["SECONDARY"])
-        self.sep1.pack(fill="x", padx=20, pady=5)
+        self.sep1.pack(fill="x", padx=15, pady=5)
         
         # Selector
         self.filt_frame = tk.Frame(self.left_panel, bg=self.colors["PRIMARY"])
-        self.filt_frame.pack(fill="x", padx=20, pady=10)
+        self.filt_frame.pack(fill="x", padx=15, pady=8)
         
-        self.lbl_campus = tk.Label(self.filt_frame, text="Campus Universitario:", font=("Arial", 10, "bold"), fg="#FFFFFF", bg=self.colors["PRIMARY"])
-        self.lbl_campus.grid(row=0, column=0, sticky="w", pady=5)
+        self.lbl_campus = tk.Label(self.filt_frame, text="Campus Universitario:", font=self.font_bold_md, fg="#FFFFFF", bg=self.colors["PRIMARY"])
+        self.lbl_campus.grid(row=0, column=0, sticky="w", pady=3)
         
         campuses = list(df_base['campus_name'].unique())
-        self.campus_combo = ttk.Combobox(self.filt_frame, textvariable=self.selected_campus, values=campuses, state="readonly", width=32)
-        self.campus_combo.grid(row=1, column=0, sticky="w", pady=(0, 10))
+        self.campus_combo = ttk.Combobox(self.filt_frame, textvariable=self.selected_campus, values=campuses, state="readonly", width=25, font=self.font_small)
+        self.campus_combo.grid(row=1, column=0, sticky="w", pady=(0, 5))
         self.campus_combo.bind("<<ComboboxSelected>>", lambda e: self.update_analytics())
         
         self.sep2 = tk.Frame(self.left_panel, height=2, bg=self.colors["SECONDARY"])
-        self.sep2.pack(fill="x", padx=20, pady=10)
+        self.sep2.pack(fill="x", padx=15, pady=8)
         
         # Indicadores
         self.res_frame = tk.Frame(self.left_panel, bg=self.colors["PRIMARY"])
-        self.res_frame.pack(fill="both", expand=True, padx=20, pady=5)
+        self.res_frame.pack(fill="both", expand=True, padx=15, pady=5)
         
-        self.cons_lbl = tk.Label(self.res_frame, text="Consumo Total Campus: 0.00 MWh", font=("Arial", 10, "bold"), fg="#FFFFFF", bg=self.colors["PRIMARY"])
-        self.cons_lbl.pack(anchor="w", pady=6)
+        self.cons_lbl = tk.Label(self.res_frame, text="Consumo Total: 0.00 MWh", font=self.font_bold_md, fg="#FFFFFF", bg=self.colors["PRIMARY"])
+        self.cons_lbl.pack(anchor="w", pady=4)
         
-        self.diff_lbl = tk.Label(self.res_frame, text="Desviación Energética: 0.00%", font=("Arial", 10, "bold"), fg=self.colors["ACCENT"], bg=self.colors["PRIMARY"])
-        self.diff_lbl.pack(anchor="w", pady=6)
+        self.diff_lbl = tk.Label(self.res_frame, text="Desviación Energética: 0.00%", font=self.font_bold_md, fg=self.colors["ACCENT"], bg=self.colors["PRIMARY"])
+        self.diff_lbl.pack(anchor="w", pady=4)
         
-        self.co2_lbl = tk.Label(self.res_frame, text="Huella CO2 Emitida: 0.00 ton", font=("Arial", 10, "bold"), fg="#E0E0E0", bg=self.colors["PRIMARY"])
-        self.co2_lbl.pack(anchor="w", pady=6)
+        self.co2_lbl = tk.Label(self.res_frame, text="Huella CO2: 0.00 ton", font=self.font_bold_md, fg="#E0E0E0", bg=self.colors["PRIMARY"])
+        self.co2_lbl.pack(anchor="w", pady=4)
         
         self.sep3 = tk.Frame(self.res_frame, height=2, bg=self.colors["SECONDARY"])
-        self.sep3.pack(fill="x", pady=12)
+        self.sep3.pack(fill="x", pady=8)
         
         # Tarjeta de Puntuación
         self.score_card = tk.Frame(self.res_frame, bg=self.colors["CARD_SCORE"], bd=1, relief="solid")
-        self.score_card.pack(fill="x", pady=5, ipady=8, ipadx=8)
+        self.score_card.pack(fill="x", pady=5, ipady=6, ipadx=6)
         
-        self.score_title = tk.Label(self.score_card, text="Puntaje Total GreenMetric:", font=("Arial", 10, "bold"), fg=self.colors["ACCENT"], bg=self.colors["CARD_SCORE"])
-        self.score_title.pack(anchor="w", padx=10, pady=(5, 0))
+        self.score_title = tk.Label(self.score_card, text="Puntaje Total GreenMetric:", font=self.font_bold_md, fg=self.colors["ACCENT"], bg=self.colors["CARD_SCORE"])
+        self.score_title.pack(anchor="w", padx=8, pady=(4, 0))
         
-        self.score_lbl = tk.Label(self.score_card, text="0 / 10,000 pts", font=("Arial", 16, "bold"), fg="#FFFFFF", bg=self.colors["CARD_SCORE"])
-        self.score_lbl.pack(anchor="w", padx=10, pady=(0, 5))
+        self.score_lbl = tk.Label(self.score_card, text="0 / 10,000 pts", font=self.font_bold_lg, fg="#FFFFFF", bg=self.colors["CARD_SCORE"])
+        self.score_lbl.pack(anchor="w", padx=8, pady=(0, 4))
         
-        self.cat_summary_lbl = tk.Label(self.res_frame, text="", font=("Arial", 9), fg="#D0D0D0", bg=self.colors["PRIMARY"], justify="left")
-        self.cat_summary_lbl.pack(anchor="w", pady=12)
+        # Resumen de categorías
+        self.cat_summary_lbl = tk.Label(self.res_frame, text="", font=self.font_regular, fg="#E2E8F0", bg=self.colors["PRIMARY"], justify="left")
+        self.cat_summary_lbl.pack(anchor="w", pady=10)
         
         # Matplotlib Canvas
-        self.fig = plt.Figure(figsize=(10, 6.5))
-        self.ax_line = self.fig.add_subplot(121)
-        self.ax_radar = self.fig.add_subplot(122, polar=True)
-        self.fig.tight_layout(pad=3.5)
+        self.fig = plt.Figure(figsize=(8, 8))
+        self.ax_line = self.fig.add_subplot(211)
+        self.ax_radar = self.fig.add_subplot(212, polar=True)
+        self.fig.tight_layout(pad=3.0)
         
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.right_panel)
-        self.canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
+        self.canvas.get_tk_widget().pack(fill="both", expand=True, padx=5, pady=5)
 
     def toggle_theme(self):
         """Alterna entre Modo Claro y Modo Oscuro."""
@@ -235,7 +265,7 @@ class GreenMetricAuditApp:
         top_bar = tk.Frame(help_win, bg=self.colors["PRIMARY"], height=60)
         top_bar.pack(fill="x")
         
-        title_help = tk.Label(top_bar, text=" Guía de Métricas e Indicadores", font=("Arial", 12, "bold"), fg="#FFFFFF", bg=self.colors["PRIMARY"])
+        title_help = tk.Label(top_bar, text=" Guía de Métricas e Indicadores", font=self.font_title, fg="#FFFFFF", bg=self.colors["PRIMARY"])
         title_help.pack(side="left", padx=20, pady=15)
         
         container = tk.Frame(help_win, bg=self.colors["BG_MAIN"])
@@ -265,13 +295,13 @@ class GreenMetricAuditApp:
             card = tk.Frame(scroll_frame, bg=self.colors["BG_CARD"], bd=1, relief="solid", highlightthickness=0)
             card.pack(fill="x", pady=6, ipadx=10, ipady=8)
             
-            lbl_title = tk.Label(card, text=titulo, font=("Arial", 10, "bold"), fg=self.colors["ACCENT"], bg=self.colors["BG_CARD"], anchor="w")
+            lbl_title = tk.Label(card, text=titulo, font=self.font_bold_md, fg=self.colors["ACCENT"], bg=self.colors["BG_CARD"], anchor="w")
             lbl_title.pack(fill="x")
             
-            lbl_desc = tk.Label(card, text=desc, font=("Arial", 9), fg=self.colors["TEXT_MAIN"], bg=self.colors["BG_CARD"], justify="left", anchor="w", wraplength=580)
+            lbl_desc = tk.Label(card, text=desc, font=self.font_small, fg=self.colors["TEXT_MAIN"], bg=self.colors["BG_CARD"], justify="left", anchor="w", wraplength=580)
             lbl_desc.pack(fill="x", pady=(4, 0))
 
-        btn_close = tk.Button(help_win, text="Entendido / Cerrar", font=("Arial", 10, "bold"), fg="#FFFFFF", bg=self.colors["SECONDARY"], bd=0, cursor="hand2", pady=8, command=help_win.destroy)
+        btn_close = tk.Button(help_win, text="Entendido / Cerrar", font=self.font_bold_md, fg="#FFFFFF", bg=self.colors["SECONDARY"], bd=0, cursor="hand2", pady=8, command=help_win.destroy)
         btn_close.pack(fill="x", padx=20, pady=(0, 15))
 
     def update_analytics(self):
@@ -298,10 +328,10 @@ class GreenMetricAuditApp:
         score_SI, score_WS, score_WR, score_TR, score_ED, score_GD = 1150, 1350, 780, 1200, 1450, 350
         total_score = score_SI + score_EC + score_WS + score_WR + score_TR + score_ED + score_GD
         
-        self.cons_lbl.config(text=f"Consumo Total Campus: {total_real_mwh:,.2f} MWh")
+        self.cons_lbl.config(text=f"Consumo Total: {total_real_mwh:,.2f} MWh")
         diff_color = "#FF6B6B" if diff_pct > 5.0 else self.colors["ACCENT"]
         self.diff_lbl.config(text=f"Desviación Energética: {diff_pct:+.2f}%", fg=diff_color)
-        self.co2_lbl.config(text=f"Huella CO2 Emitida: {co2_ton:,.2f} ton")
+        self.co2_lbl.config(text=f"Huella CO2: {co2_ton:,.2f} ton")
         self.score_lbl.config(text=f"{total_score:,} / 10,000 pts")
         
         detalles_txt = (
@@ -324,7 +354,7 @@ class GreenMetricAuditApp:
         self.ax_line.clear()
         self.ax_radar.clear()
         
-        # Gráfico 1: Consumo Histórico
+        # GRÁFICO 1 (ARRIBA): Consumo Histórico
         df_monthly = df_filt.groupby('month_period').agg({'consumption': 'sum', 'predicted_consumption': 'sum'}) / 1000.0
         months_str = [str(x) for x in df_monthly.index]
         
@@ -332,18 +362,19 @@ class GreenMetricAuditApp:
         self.ax_line.plot(months_str, df_monthly['consumption'], color="#FF5252", marker="o", label="Consumo Real", linewidth=2)
         self.ax_line.plot(months_str, df_monthly['predicted_consumption'], color=self.colors["ACCENT"], marker="s", label="Esperado (ML)", linewidth=2, linestyle="--")
         
-        self.ax_line.set_title("Auditoría Histórica de Energía (MWh)", fontsize=10, fontweight="bold", color=text_fig, pad=10)
-        self.ax_line.set_xlabel("Periodo", fontsize=8, color=text_fig)
-        self.ax_line.set_ylabel("MWh", fontsize=8, color=text_fig)
-        self.ax_line.tick_params(colors=text_fig, labelsize=7)
+        # Uso de Montserrat en los títulos de Matplotlib
+        self.ax_line.set_title("Auditoría Histórica de Energía (MWh)", fontfamily=FONT_FAMILY_NAME, fontsize=10, fontweight="bold", color=text_fig, pad=10)
+        self.ax_line.set_xlabel("Periodo", fontfamily=FONT_FAMILY_NAME, fontsize=8, color=text_fig)
+        self.ax_line.set_ylabel("MWh", fontfamily=FONT_FAMILY_NAME, fontsize=8, color=text_fig)
+        self.ax_line.tick_params(colors=text_fig, labelsize=8)
         self.ax_line.legend(loc="upper right", fontsize=8, facecolor=bg_fig, edgecolor=grid_color, labelcolor=text_fig)
         self.ax_line.grid(True, linestyle="--", alpha=0.3, color=grid_color)
         
         tick_spacing = max(1, len(months_str) // 6)
         self.ax_line.set_xticks(months_str[::tick_spacing])
-        self.ax_line.set_xticklabels(months_str[::tick_spacing], rotation=30)
+        self.ax_line.set_xticklabels(months_str[::tick_spacing], rotation=0, fontfamily=FONT_FAMILY_NAME)
         
-        # Gráfico 2: Radar UI GreenMetric
+        # GRÁFICO 2 (ABAJO): Radar UI GreenMetric
         categories = ['SI\nInfraestructura', 'EC\nEnergía', 'WS\nResiduos', 'WR\nAgua', 'TR\nTransporte', 'ED\nEducación', 'GD\nGobernanza']
         scores = [score_SI/1500*100, score_EC/2100*100, score_WS/1800*100, score_WR/1000*100, score_TR/1800*100, score_ED/1800*100, 70]
         
@@ -356,11 +387,13 @@ class GreenMetricAuditApp:
         self.ax_radar.fill(angles, scores, color=self.colors["ACCENT"], alpha=0.35)
         
         self.ax_radar.set_xticks(angles[:-1])
-        self.ax_radar.set_xticklabels(categories, fontsize=7, fontweight="bold", color=text_fig)
-        self.ax_radar.set_title("Cumplimiento % por Categoría GreenMetric", fontsize=10, fontweight="bold", color=text_fig, pad=15)
+        self.ax_radar.set_xticklabels(categories, fontfamily=FONT_FAMILY_NAME, fontsize=8, fontweight="bold", color=text_fig)
         self.ax_radar.tick_params(colors=text_fig)
         self.ax_radar.set_ylim(0, 100)
         
+        self.ax_radar.set_xlabel("Cumplimiento % por Categoría GreenMetric", fontfamily=FONT_FAMILY_NAME, fontsize=10, fontweight="bold", color=text_fig, labelpad=15)
+        
+        self.fig.tight_layout(pad=2.0)
         self.canvas.draw()
 
     def on_closing(self):

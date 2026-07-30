@@ -8,9 +8,45 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
+import kagglehub
+import shutil
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Ruta del dataset de Kaggle en caché local
-KAGGLE_PATH = r"C:\Users\Usuario\.cache\kagglehub\datasets\cdaclab\unicon\versions\1"
+KAGGLE_PATH = os.path.join(BASE_DIR, "data")
+
+# =====================================================================
+# NUEVO: DESCARGA AUTOMÁTICA DE LOS DATOS SI NO EXISTEN
+# =====================================================================
+if not os.path.exists(os.path.join(KAGGLE_PATH, "building_meta.csv")):
+    print("La carpeta 'data' está vacía o incompleta. Descargando dataset de Kaggle...")
+    try:
+
+        
+        # Descarga el dataset a la caché global de kagglehub
+        cache_dir = kagglehub.dataset_download('cdaclab/unicon')
+        
+        # Crea la carpeta data del proyecto si no existe
+        os.makedirs(KAGGLE_PATH, exist_ok=True)
+        
+        # Copia todos los archivos CSV descargados a tu carpeta data/
+        for archivo in os.listdir(cache_dir):
+            if archivo.endswith('.csv'):
+                shutil.copy(os.path.join(cache_dir, archivo), KAGGLE_PATH)
+                
+        # Corrección por si el archivo viene nombrado con 'a' (calendar) en vez de 'e' (calender)
+        src_cal = os.path.join(KAGGLE_PATH, "calendar.csv")
+        dst_cal = os.path.join(KAGGLE_PATH, "calender.csv")
+        if os.path.exists(src_cal) and not os.path.exists(dst_cal):
+            shutil.copy(src_cal, dst_cal)
+            
+        print("¡Descarga completada con éxito en la carpeta 'data/'!")
+    except Exception as e:
+        print(f"Error crítico al descargar de Kaggle: {e}")
+        print("Por favor, asegúrate de tener internet e instalar kagglehub ('pip install kagglehub').")
+        exit(1)
+# =====================================================================
+
 
 print("=== INICIANDO PREPROCESAMIENTO DE DATOS ===")
 
